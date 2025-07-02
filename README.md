@@ -4,10 +4,13 @@
 
 A super simple utility to time your python code.
 
+## To-Do 
+
+Deploy to PyPi
+
 ## usage
 
 ```python
-from clockit import clockit
 
 with clockit() as ct:
     # do something expensive...
