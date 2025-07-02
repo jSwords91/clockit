@@ -1,0 +1,7 @@
+[project]
+name = "clockit"
+version = "0.1.0"
+description = "A super simple utility to time your python code."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
