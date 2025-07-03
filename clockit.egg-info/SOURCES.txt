@@ -1,6 +1,0 @@
-README.md
-pyproject.toml
-clockit.egg-info/PKG-INFO
-clockit.egg-info/SOURCES.txt
-clockit.egg-info/dependency_links.txt
-clockit.egg-info/top_level.txt

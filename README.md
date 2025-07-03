@@ -2,63 +2,85 @@
 
 # clockit
 
-A super simple utility to time your python code.
-
-## To-Do 
-
-Deploy to PyPi
+A super lightweight utility to time your Python code — nothing more, nothing less.
 
 ## usage
 
-```python
+Install with `pip install clockit-code` or with `uv pip install clockit-code`.
 
+Then import with `from clockit import clockit`
+
+### Example 1: Timing Data Loading
+```python
+from clockit import clockit
+import pandas as pd
+
+with clockit(name="load csv") as ct:
+    df = pd.read_csv("big_data.csv")
+print(ct)  # load csv: X.XXX seconds
+```
+
+### Example 2: Timing Model Training
+```python
+from clockit import clockit
+from sklearn.ensemble import RandomForestClassifier
+
+X, y = ...  # your features and labels
+model = RandomForestClassifier()
+
+with clockit(printer=print, name="fit model") as ct:
+    model.fit(X, y)
+# Output: fit model: X.XXX seconds
+```
+
+### Example 3: Batch Processing with Nested Timers
+```python
+from clockit import clockit
+import time
+
+data_batches = [range(1000), range(1000), range(1000)]
+
+with clockit(printer=print, name="total batch processing") as ct_total:
+    for i, batch in enumerate(data_batches):
+        with clockit(printer=print, name=f"process batch {i+1}") as ct:
+            time.sleep(0.5)  # simulate processing
+print(ct_total)  # total batch processing: X.XXX seconds
+```
+
+### Example 4: Accessing Raw Timing Data
+```python
 with clockit() as ct:
-    # do something expensive...
-    my_slow_func()
-
-print(ct)  # Time: 2.037 seconds
+    # expensive operation
+    ...
+print(ct.elapsed)   # 1.234 (float seconds)
+print(ct.readout)   # 'Time: 1.234 seconds'
 ```
 
-It prints nothing by default — just gives you structured access:
-
+### Example 5: Custom Formatting
 ```python
-ct.elapsed   # the float value
-ct.readout   # the pretty string
+# Custom formatting
+def my_printer(msg):
+    print(f"⏱️  {msg}")
+
+with clockit(printer=my_printer) as ct:
+    time.sleep(1)
 ```
 
-We can print (or log, etc) inline, too.
-```python
-with clockit(printer=print) as ct:
-    # your stuff
-    another_func()
-```
-Would output:
-```bash
-Time: X.XX seconds
-```
+See more examples in `examples.ipynb`
 
-You can nest it too:
+## why clockit?
 
-```python
+- 🪶 Lightweight: zero dependencies, minimal footprint
+- 🧩 Drop-in: works anywhere
+- 🤫 Silent by default, but easy to log or print
+- 🏗️ Perfect for steps, scripts, or experiments
+- 🕶️ No configuration, no boilerplate, just timing
 
-with clockit() as ct_global:
-    with clockit() as ct:
-        time.sleep(1) # stuff that takes ~ 1 sec
+## Limitations
 
-    with clockit() as ct2:
-        time.sleep(3) # stuff that takes ~ 3 seconds
-
-print(ct)
-print(ct2)
-print(ct_global)
-```
-
-would output:
-
-```bash
-Time: 1.010 seconds
-Time: 3.008 seconds
-Time: 4.018 seconds
-```
-
-See more examples in ```examples.ipynb```
+- **Wall-clock time only:**
+  - clockit uses `time.perf_counter()`, which measures elapsed (wall) time, not CPU time. This includes time spent sleeping or waiting on I/O.
+- **Single-threaded timing:**
+  - clockit does not account for parallel or asynchronous execution. If your code spawns threads, processes, or async tasks, the timer only tracks the main context and won't reflect per-task durations or concurrency effects.
+- **No GPU/CUDA synchronization:**
+  - For GPU workloads (e.g., PyTorch, TensorFlow), clockit does not synchronize with CUDA or other accelerators. Measured time may not reflect actual device execution time unless you manually synchronize before/after timing.

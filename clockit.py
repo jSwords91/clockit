@@ -10,30 +10,35 @@ class clockit:
 
     Parameters
     ----------
+    name : str | None, default None
+        Label for this timer. If given, the final read-out becomes
+        e.g. ``"data-load: 0.537 s"``.
     printer : Callable[[str], None] | None, default None
-        Callable to receive the formatted read-out string.
-        Use `print`, `logger.info`, `functools.partial(print, file=sys.stderr)`, etc.
-        If None, no output is produced inside ``__exit__``.
+        Callback that receives the read-out when the context exits.
+        Pass ``print``, ``logger.info``, etc. If ``None`` nothing is
+        printed automatically.
 
     Examples
     --------
-    >>> with clockit() as ct:
+    >>> with clockit("train-step") as ct:
     ...     time.sleep(1)
     ...
     >>> print(ct)
-    Time: 1.000 seconds
+    train-step: 1.001 s
 
     >>> with clockit(printer=print) as ct:
-    ...     time.sleep(1)
+    ...     time.sleep(0.5)
     ...
-    Time: 1.000 seconds
-
-    >>> with clockit(printer=logger.info) as ct:
-    ...     time.sleep(1)
-    ...
+    0.501 s
     """
 
-    def __init__(self, *, printer: Optional[Callable[[str], None]] = None) -> None:
+    def __init__(
+        self,
+        name: str | None = None,
+        *,
+        printer: Optional[Callable[[str], None]] = None,
+    ) -> None:
+        self.name = name
         self._printer = printer
         self.elapsed: float | None = None
         self.readout: str | None = None
@@ -45,7 +50,10 @@ class clockit:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         self.elapsed = time.perf_counter() - self._start
-        self.readout = f"Time: {self.elapsed:.3f} seconds"
+        if self.name is not None:
+            self.readout = f"{self.name}: {self.elapsed:.3f} seconds"
+        else:
+            self.readout = f"Time: {self.elapsed:.3f} seconds"
         if self._printer:
             self._printer(self.readout)
         return False
